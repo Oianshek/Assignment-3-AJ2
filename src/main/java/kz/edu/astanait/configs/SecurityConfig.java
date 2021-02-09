@@ -1,5 +1,7 @@
 package kz.edu.astanait.configs;
 
+import kz.edu.astanait.model.User;
+import kz.edu.astanait.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,16 +12,21 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
+import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSource dataSource;
+    @Autowired
+    private UserRepository userRepo;
 
     @Bean
-    public UserDetailsService UserDetailsService(){
+    public UserDetailsService userDetailsService(){
         return new MyUserDetailsService();
     }
 
@@ -45,14 +52,34 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/users").authenticated()
-                .anyRequest().permitAll()
+                .antMatchers("/users/register").permitAll()
+                .antMatchers("/accounts/**").hasAnyRole("user","admin")
+                .antMatchers("/users/show_profile").hasAnyRole("user","admin")
+                .antMatchers("/users/showHistory").hasAnyRole("user","admin")
+                .antMatchers("/users/converted_version").hasAnyRole("user","admin")
+                .antMatchers("/users/getAllPayments").hasAnyRole("admin")
+                .antMatchers("/users/showAllUsers").hasAnyRole("admin")
+                .antMatchers("/api/**").permitAll()
                 .and()
-                .formLogin().loginPage("/login")
+                .formLogin()
+                .successHandler(authenticationSuccessHandler())
                 .usernameParameter("email")
-                .defaultSuccessUrl("/users")
                 .permitAll()
                 .and()
                 .logout().logoutSuccessUrl("/").permitAll();
     }
+
+    private AuthenticationSuccessHandler authenticationSuccessHandler() {
+        return ((request, response, authentication) -> {
+            String email = request.getParameter("email");
+            User user = userRepo.findByEmail(email);
+
+            HttpSession session = request.getSession();
+            session.setMaxInactiveInterval(60 * 5); //5 minutes
+            session.setAttribute("user", user);
+
+            response.sendRedirect("/");
+        });
+    }
+
 }

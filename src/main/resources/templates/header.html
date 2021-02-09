@@ -1,27 +1,39 @@
-<nav class="container navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="#">Navbar</a>
+<nav class="container navbar navbar-expand-lg navbar-dark bg-dark mb-5" xmlns:th="http://www.thymeleaf.org/">
+    <a class="navbar-brand" th:href="@{/users/}">AITUBank</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="#">Home</a>
+            <li class="nav-item active" th:if="${session.user != null}">
+                <a class="nav-link" th:href="@{/users/show_profile}" th:text="${session.user.firstName}"></a>
             </li>
             <li class="nav-item active">
-                <a class="nav-link" href="#">Features</a>
+                <a class="nav-link" th:href="@{/users/}">Home</a>
             </li>
             <li class="nav-item active">
-                <a class="nav-link" href="#">Pricing</a>
+                <a class="nav-link" th:href="@{/users/services}">Services</a>
+            </li>
+            <li class="nav-item active" th:if="${session.user != null && session.user.role.roleName == 'admin'}">
+                <a class="nav-link" th:href="@{/users/getAllPayments}">See All Payments</a>
+            </li>
+            <li class="nav-item active" th:if="${session.user != null && session.user.role.roleName == 'admin'}">
+                <a class="nav-link" th:href="@{/users/showAllUsers}">See All Users</a>
             </li>
         </ul>
-        <ul class="navbar-nav mr-auto">
+
+        <ul class="navbar-nav ml-auto" th:if="${session.user == null}">
             <li class="nav-item active">
-                <a class="nav-link" href="#">Login</a>
+                <a class="nav-link" th:href="@{/login}">Login</a>
             </li>
             <li class="nav-item active">
-                <a class="nav-link">Register</a>
+                <a class="nav-link" th:href="@{/users/register}">Register</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto" th:if="${session.user != null}">
+            <li class="nav-item active">
+                <a class="nav-link" th:href="@{/logout}">Logout</a>
             </li>
         </ul>
     </div>
